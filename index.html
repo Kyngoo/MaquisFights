@@ -238,9 +238,9 @@
 <script src="db.js?v=11"></script>
 <script src="game.js?v=11"></script>
 <script>
+// Eliminar cualquier Service Worker residual
 if("serviceWorker" in navigator){
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-  navigator.serviceWorker.register("/sw.js");
 }
 </script>
 </body>
