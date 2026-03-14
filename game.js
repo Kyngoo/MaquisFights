@@ -21,8 +21,13 @@ const APP = {
 // ---- Utilidades ----
 function dc(o){ return JSON.parse(JSON.stringify(o)); }
 function go(id){
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  target.style.display = 'flex';
 }
 function resetPick(){ APP.sel = null; document.getElementById('fight-btn').disabled = true; }
 function setLoading(txt){ document.getElementById('loading-txt').textContent = txt; }
