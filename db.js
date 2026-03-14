@@ -118,7 +118,7 @@ async function dbGetDeck(playerId){
 async function dbSaveDeck(playerId, cardIds){
   const { error } = await getDB()
     .from('decks')
-    .upsert({ player_id: playerId, card_ids: cardIds });
+    .upsert({ player_id: playerId, card_ids: cardIds }, { onConflict: 'player_id' });
   if(error) throw error;
 }
 

@@ -12,8 +12,6 @@ const APP = {
   battleEnemy:  null,
   turn:       'player',
   stunned:    false,
-  starterOptions: [],
-  starterSel: null,
   deckSel:    [],
   authMode:   'login',  // 'login' | 'register'
 };
@@ -31,7 +29,6 @@ function cardById(id){ return allCards().find(c => c.id === id); }
 const ROUTES = {
   home:       { screen: 'screen-home',       load: () => updateHomeBadge() },
   auth:       { screen: 'screen-auth' },
-  starter:    { screen: 'screen-starter' },
   loading:    { screen: 'screen-loading' },
   collection: { screen: 'screen-collection', load: () => renderMyCollection() },
   deck:       { screen: 'screen-deck',        load: () => renderDeck() },
@@ -108,11 +105,7 @@ async function loadUserData(){
   }
   APP.collection = await dbGetCollection(APP.user.id);
   APP.deck       = await dbGetDeck(APP.user.id);
-  if(APP.collection.length === 0){
-    showStarterPick();
-  } else {
-    navigate('home');
-  }
+  navigate('home');
 }
 
 // ============================================================
@@ -225,123 +218,6 @@ function updateHomeBadge(){
   document.getElementById('pb-xpfill').style.width = Math.min(100, Math.round(p.xp/needed*100))+'%';
 }
 
-// ============================================================
-//  STARTER PICK
-// ============================================================
-// ---- Carousel state ----
-let CAR = { idx: 0, total: 0, dragging: false, startX: 0, diffX: 0 };
-
-function showStarterPick(){
-  const shuffled = [...PLAYER_CARDS].sort(() => Math.random()-.5);
-  APP.starterOptions = shuffled.slice(0,3);
-  APP.starterSel = null;
-  CAR.idx = 0; CAR.total = APP.starterOptions.length;
-  document.getElementById('starter-btn').disabled = true;
-  renderCarousel();
-  navigate('starter');
-}
-
-function renderCarousel(){
-  const cards = APP.starterOptions;
-  const carousel = document.getElementById('starter-carousel');
-  const dots     = document.getElementById('starter-dots');
-
-  // slides
-  carousel.innerHTML = cards.map((c, i) => {
-    const isActive = i === CAR.idx;
-    const sel = APP.starterSel === c.id;
-    return `<div class="starter-slide${isActive?' active':''}" data-idx="${i}">
-      ${buildCard(c,'starter', sel)}
-    </div>`;
-  }).join('');
-
-  // dots
-  dots.innerHTML = cards.map((_,i) =>
-    `<div class="sdot${i===CAR.idx?' active':''}"></div>`
-  ).join('');
-
-  // position
-  carousel.style.transform = `translateX(-${CAR.idx * 100}%)`;
-
-  // arrows
-  const al = document.getElementById('arr-left');
-  const ar = document.getElementById('arr-right');
-  if(al) al.disabled = CAR.idx === 0;
-  if(ar) ar.disabled = CAR.idx === CAR.total - 1;
-
-  // touch/swipe
-  setupCarouselTouch(carousel);
-}
-
-function carouselGo(idx){
-  CAR.idx = Math.max(0, Math.min(CAR.total-1, idx));
-  // auto-select the visible card
-  const c = APP.starterOptions[CAR.idx];
-  if(c){ APP.starterSel = c.id; document.getElementById('starter-btn').disabled = false; }
-  renderCarousel();
-}
-function carouselNext(){ carouselGo(CAR.idx + 1); }
-function carouselPrev(){ carouselGo(CAR.idx - 1); }
-
-function setupCarouselTouch(el){
-  el.ontouchstart = e => { CAR.dragging=true; CAR.startX=e.touches[0].clientX; CAR.diffX=0; el.style.transition='none'; };
-  el.ontouchmove  = e => {
-    if(!CAR.dragging) return;
-    CAR.diffX = e.touches[0].clientX - CAR.startX;
-    el.style.transform = `translateX(calc(-${CAR.idx*100}% + ${CAR.diffX}px))`;
-  };
-  el.ontouchend   = () => {
-    CAR.dragging = false;
-    el.style.transition = '';
-    if(CAR.diffX < -50)      carouselNext();
-    else if(CAR.diffX > 50)  carouselPrev();
-    else renderCarousel();
-  };
-}
-
-function pickStarter(id){
-  // clicking a card selects it and we stay on that slide
-  APP.starterSel = id;
-  const idx = APP.starterOptions.findIndex(c=>c.id===id);
-  if(idx>=0) CAR.idx = idx;
-  document.getElementById('starter-btn').disabled = false;
-  renderCarousel();
-}
-
-async function confirmStarter(){
-  if(!APP.starterSel) return;
-  const btn = document.getElementById('starter-btn');
-  const inner = btn.querySelector('.gbtn-inner');
-  btn.disabled = true;
-  inner.textContent = 'Guardando...';
-  try {
-    // Si el trigger de Supabase aún no creó el perfil, esperamos o lo creamos nosotros
-    if(!APP.profile){
-      inner.textContent = 'Preparando...';
-      for(let i = 0; i < 6; i++){
-        await new Promise(r => setTimeout(r, 500));
-        APP.profile = await dbGetProfile(APP.user.id);
-        if(APP.profile) break;
-      }
-      if(!APP.profile){
-        const nick = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
-        await dbCreateProfile(APP.user.id, nick);
-        APP.profile = await dbGetProfile(APP.user.id);
-      }
-    }
-    if(!APP.profile) throw new Error('No se pudo crear el perfil. Vuelve a intentarlo.');
-    await dbAddCard(APP.user.id, APP.starterSel);
-    APP.collection = [APP.starterSel];
-    APP.deck = [APP.starterSel];
-    await dbSaveDeck(APP.user.id, APP.deck);
-    navigate('home');
-  } catch(e){
-    console.error('confirmStarter error:', e);
-    btn.disabled = false;
-    inner.textContent = '✦ ELEGIR ESTA CARTA ✦';
-    alert('Error: ' + e.message);
-  }
-}
 
 // ============================================================
 //  COLECCIÓN
