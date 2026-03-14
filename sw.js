@@ -1,5 +1,5 @@
-const CACHE = 'maquisfights-v11';
-const ASSETS = ['/', '/index.html', '/style.css', '/cards.js', '/game.js', '/manifest.json', '/db.js', '/config.js'];
+const CACHE = 'maquisfights-v12';
+const ASSETS = ['/', '/index.html', '/style.css', '/cards.js?v=11', '/game.js?v=11', '/manifest.json', '/db.js?v=11', '/config.js?v=11'];
 
 // Install — cache everything fresh
 self.addEventListener('install', e => {

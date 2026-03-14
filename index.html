@@ -233,10 +233,15 @@
   </div>
 </div>
 
-<script src="config.js"></script>
-<script src="cards.js"></script>
-<script src="db.js"></script>
-<script src="game.js"></script>
-<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");</script>
+<script src="config.js?v=11"></script>
+<script src="cards.js?v=11"></script>
+<script src="db.js?v=11"></script>
+<script src="game.js?v=11"></script>
+<script>
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  navigator.serviceWorker.register("/sw.js");
+}
+</script>
 </body>
 </html>
