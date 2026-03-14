@@ -100,7 +100,7 @@
 <div class="screen" id="screen-home">
   <div class="home-bg-grid"></div>
   <div class="home-content">
-    <div class="player-badge" id="player-badge" onclick="go('screen-profile');loadProfile()">
+    <div class="player-badge" id="player-badge" onclick="navigate('profile')">
       <div class="pb-avatar" id="pb-avatar">?</div>
       <div class="pb-info">
         <div class="pb-nick"  id="pb-nick">—</div>
@@ -111,10 +111,10 @@
     <div class="logo-wrap"><div class="game-logo-main">MAQUIS<br>FIGHTS</div></div>
     <div class="logo-sub">⚔ ELIGE TU DESTINO ⚔</div>
     <div class="gold-divider"></div>
-    <button class="gbtn gold" onclick="go('screen-pick');renderPick()"><div class="gbtn-inner">⚔ EMPEZAR BATALLA</div></button>
-    <button class="gbtn blue" onclick="go('screen-collection');renderMyCollection()"><div class="gbtn-inner">🃏 MI COLECCIÓN</div></button>
-    <button class="gbtn dark" onclick="go('screen-deck');renderDeck()"><div class="gbtn-inner">⚙ MI MAZO</div></button>
-    <button class="gbtn purple" onclick="go('screen-ranking');loadRanking()"><div class="gbtn-inner">🏆 RANKING</div></button>
+    <button class="gbtn gold" onclick="navigate('pick')"><div class="gbtn-inner">⚔ EMPEZAR BATALLA</div></button>
+    <button class="gbtn blue" onclick="navigate('collection')"><div class="gbtn-inner">🃏 MI COLECCIÓN</div></button>
+    <button class="gbtn dark" onclick="navigate('deck')"><div class="gbtn-inner">⚙ MI MAZO</div></button>
+    <button class="gbtn purple" onclick="navigate('ranking')"><div class="gbtn-inner">🏆 RANKING</div></button>
     <button class="gbtn red" onclick="logout()"><div class="gbtn-inner">↩ CERRAR SESIÓN</div></button>
   </div>
 </div>
@@ -122,7 +122,7 @@
 <!-- RANKING -->
 <div class="screen" id="screen-ranking">
   <div class="topbar">
-    <button class="back-btn" onclick="go('screen-home')">← Volver</button>
+    <button class="back-btn" onclick="navigate('home')">← Volver</button>
     <span class="screen-ttl">RANKING GLOBAL</span>
   </div>
   <div class="ranking-header">
@@ -139,7 +139,7 @@
 <!-- PROFILE -->
 <div class="screen" id="screen-profile">
   <div class="topbar">
-    <button class="back-btn" onclick="go('screen-home')">← Volver</button>
+    <button class="back-btn" onclick="navigate('home')">← Volver</button>
     <span class="screen-ttl">PERFIL</span>
   </div>
   <div class="scroll-content">
@@ -167,7 +167,7 @@
 <!-- MY COLLECTION -->
 <div class="screen" id="screen-collection">
   <div class="topbar">
-    <button class="back-btn" onclick="go('screen-home')">← Volver</button>
+    <button class="back-btn" onclick="navigate('home')">← Volver</button>
     <span class="screen-ttl">MI COLECCIÓN</span>
     <span class="coll-count" id="coll-count"></span>
   </div>
@@ -177,7 +177,7 @@
 <!-- DECK BUILDER -->
 <div class="screen" id="screen-deck">
   <div class="topbar">
-    <button class="back-btn" onclick="go('screen-home')">← Volver</button>
+    <button class="back-btn" onclick="navigate('home')">← Volver</button>
     <span class="screen-ttl">MI MAZO</span>
     <span class="coll-count" id="deck-count">0/3</span>
   </div>
@@ -191,7 +191,7 @@
 <!-- PICK -->
 <div class="screen" id="screen-pick">
   <div class="topbar">
-    <button class="back-btn" onclick="go('screen-home')">← Volver</button>
+    <button class="back-btn" onclick="navigate('home')">← Volver</button>
     <span class="screen-ttl">ELIGE TU LUCHADOR</span>
   </div>
   <div class="deck-hint">Solo puedes usar cartas de tu mazo activo</div>
@@ -249,8 +249,8 @@
       ⬆ ¡SUBISTE AL NIVEL <span id="new-level">?</span>!
     </div>
     <div class="r-btns">
-      <button class="gbtn gold sm" onclick="go('screen-pick');resetPick();renderPick()"><div class="gbtn-inner">⚔ REVANCHA</div></button>
-      <button class="gbtn dark sm" onclick="go('screen-home')"><div class="gbtn-inner">INICIO</div></button>
+      <button class="gbtn gold sm" onclick="navigate('pick')"><div class="gbtn-inner">⚔ REVANCHA</div></button>
+      <button class="gbtn dark sm" onclick="navigate('home')"><div class="gbtn-inner">INICIO</div></button>
     </div>
   </div>
 </div>

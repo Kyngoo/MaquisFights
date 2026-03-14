@@ -20,25 +20,66 @@ const APP = {
 
 // ---- Utilidades ----
 function dc(o){ return JSON.parse(JSON.stringify(o)); }
-function go(id){
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
-  const target = document.getElementById(id);
-  target.classList.add('active');
-  target.style.display = 'flex';
-}
 function resetPick(){ APP.sel = null; document.getElementById('fight-btn').disabled = true; }
 function setLoading(txt){ document.getElementById('loading-txt').textContent = txt; }
 function allCards(){ return [...PLAYER_CARDS, ...ENEMY_CARDS]; }
 function cardById(id){ return allCards().find(c => c.id === id); }
 
 // ============================================================
+//  ROUTER — navegación por hash
+// ============================================================
+const ROUTES = {
+  home:       { screen: 'screen-home',       load: () => updateHomeBadge() },
+  auth:       { screen: 'screen-auth' },
+  starter:    { screen: 'screen-starter' },
+  loading:    { screen: 'screen-loading' },
+  collection: { screen: 'screen-collection', load: () => renderMyCollection() },
+  deck:       { screen: 'screen-deck',        load: () => renderDeck() },
+  pick:       { screen: 'screen-pick',        load: () => { resetPick(); renderPick(); } },
+  battle:     { screen: 'screen-battle' },
+  result:     { screen: 'screen-result' },
+  ranking:    { screen: 'screen-ranking',     load: () => loadRanking() },
+  profile:    { screen: 'screen-profile',     load: () => loadProfile() },
+};
+
+// Muestra sólo la pantalla indicada; oculta el resto con !important
+// para que ninguna regla CSS pueda interferir
+function showScreen(screenId){
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.setProperty('display', 'none', 'important');
+  });
+  const el = document.getElementById(screenId);
+  if(!el) return;
+  el.classList.add('active');
+  el.style.setProperty('display', 'flex', 'important');
+}
+
+// Navega a una ruta: actualiza el hash, muestra la pantalla y llama al loader
+function navigate(route){
+  const def = ROUTES[route];
+  if(!def) return;
+  showScreen(def.screen);
+  // loading no tiene hash propio (es transitorio)
+  if(route !== 'loading'){
+    history.pushState({ route }, '', '#' + route);
+  }
+  if(def.load) def.load();
+}
+
+// Botón atrás del navegador
+window.addEventListener('popstate', e => {
+  const route = e.state?.route || window.location.hash.replace('#','') || 'auth';
+  const def = ROUTES[route] || ROUTES['auth'];
+  showScreen(def.screen);
+  if(def.load) def.load();
+});
+
+// ============================================================
 //  ARRANQUE
 // ============================================================
 window.addEventListener('load', async () => {
-  go('screen-loading');
+  showScreen('screen-loading');
   setLoading('Conectando...');
   try {
     const session = await dbGetSession();
@@ -47,7 +88,7 @@ window.addEventListener('load', async () => {
       APP.user = session.user;
       await loadUserData();
     } else {
-      go('screen-auth');
+      navigate('auth');
     }
   } catch(e){
     console.error(e);
@@ -70,7 +111,7 @@ async function loadUserData(){
   if(APP.collection.length === 0){
     showStarterPick();
   } else {
-    loadHome();
+    navigate('home');
   }
 }
 
@@ -155,7 +196,7 @@ async function logout(){
   await dbLogout();
   APP.user = null; APP.profile = null; APP.collection = []; APP.deck = [];
   switchTab('login');
-  go('screen-auth');
+  navigate('auth');
 }
 
 // ---- Enter en campos auth ----
@@ -171,10 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 //  HOME
 // ============================================================
-function loadHome(){
-  go('screen-home');
-  updateHomeBadge();
-}
+function loadHome(){ navigate('home'); }
 
 function updateHomeBadge(){
   const p = APP.profile;
@@ -200,7 +238,7 @@ function showStarterPick(){
   CAR.idx = 0; CAR.total = APP.starterOptions.length;
   document.getElementById('starter-btn').disabled = true;
   renderCarousel();
-  go('screen-starter');
+  navigate('starter');
 }
 
 function renderCarousel(){
@@ -274,11 +312,10 @@ async function confirmStarter(){
   if(!APP.starterSel) return;
   const btn = document.getElementById('starter-btn');
   const inner = btn.querySelector('.gbtn-inner');
-  btn.disabled = true; inner.textContent = 'Guardando...';
-  // Ocultar pantalla starter inmediatamente para evitar doble clic
-  document.getElementById('screen-starter').style.display = 'none';
+  btn.disabled = true;
+  inner.textContent = 'Guardando...';
   try {
-    // Esperar a que el trigger de Supabase cree el perfil (puede tardar ~1s tras registro)
+    // Si el trigger de Supabase aún no creó el perfil, esperamos o lo creamos nosotros
     if(!APP.profile){
       inner.textContent = 'Preparando...';
       for(let i = 0; i < 6; i++){
@@ -286,24 +323,20 @@ async function confirmStarter(){
         APP.profile = await dbGetProfile(APP.user.id);
         if(APP.profile) break;
       }
-    }
-    // Si el trigger nunca creó el perfil, crearlo manualmente como fallback
-    if(!APP.profile){
-      const nickname = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
-      await dbCreateProfile(APP.user.id, nickname);
-      APP.profile = await dbGetProfile(APP.user.id);
+      if(!APP.profile){
+        const nick = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
+        await dbCreateProfile(APP.user.id, nick);
+        APP.profile = await dbGetProfile(APP.user.id);
+      }
     }
     if(!APP.profile) throw new Error('No se pudo crear el perfil. Vuelve a intentarlo.');
     await dbAddCard(APP.user.id, APP.starterSel);
     APP.collection = [APP.starterSel];
     APP.deck = [APP.starterSel];
     await dbSaveDeck(APP.user.id, APP.deck);
-    loadHome();
+    navigate('home');
   } catch(e){
     console.error('confirmStarter error:', e);
-    // Si algo falló, volver a mostrar la pantalla starter
-    document.getElementById('screen-starter').style.display = '';
-    go('screen-starter');
     btn.disabled = false;
     inner.textContent = '✦ ELEGIR ESTA CARTA ✦';
     alert('Error: ' + e.message);
@@ -349,7 +382,7 @@ async function saveDeck(){
   APP.deck = [...APP.deckSel];
   try {
     await dbSaveDeck(APP.user.id, APP.deck);
-    go('screen-home');
+    navigate('home');
   } catch(e){ alert('Error guardando mazo: '+e.message); }
 }
 
@@ -445,7 +478,7 @@ function startBattle(){
   const e = dc(ENEMY_CARDS[Math.floor(Math.random()*ENEMY_CARDS.length)]);
   p.mana=0;p.maxMana=3;e.mana=0;e.maxMana=3;
   APP.battlePlayer=p;APP.battleEnemy=e;APP.turn='player';APP.stunned=false;
-  go('screen-battle');
+  showScreen('screen-battle');
   document.getElementById('log-box').innerHTML='';
   updateArena();renderSkillBtns();
   addLog(`¡${p.name} VS ${e.name}! ¡QUE EMPIECE!`,'lsys');
@@ -534,7 +567,7 @@ function pickEnemySkill(e,avail){
 
 async function endBattle(win){
   const xpEarned=win?XP_WIN:XP_LOSS;
-  go('screen-result');
+  showScreen('screen-result');
   document.getElementById('r-icon').textContent =win?'🏆':'💀';
   document.getElementById('r-title').textContent=win?'¡VICTORIA!':'DERROTA';
   document.getElementById('r-sub').textContent  =win?`${APP.battlePlayer.name} destruyó a ${APP.battleEnemy.name}`:`${APP.battleEnemy.name} te eliminó.`;
