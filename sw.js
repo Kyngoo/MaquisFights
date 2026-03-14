@@ -1,4 +1,4 @@
-const CACHE = 'maquisfights-v3';
+const CACHE = 'maquisfights-v4';
 const ASSETS = ['/', '/index.html', '/style.css', '/cards.js', '/game.js', '/manifest.json', '/db.js', '/config.js'];
 
 // Install — cache everything fresh

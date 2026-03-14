@@ -53,7 +53,6 @@ body {
     radial-gradient(ellipse at 75% 95%, rgba(139,36,170,.14) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(245,200,66,.04) 0%, transparent 60%),
     var(--bg-deep);
-  position: relative;
 }
 #screen-starter { background: var(--bg-deep); }
 

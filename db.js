@@ -55,9 +55,9 @@ async function dbGetProfile(userId){
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
   if(error) throw error;
-  return data;
+  return data; // null si el perfil aún no existe (trigger pendiente)
 }
 
 async function dbUpdateXP(userId, xp, level){
