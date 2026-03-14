@@ -279,11 +279,9 @@ async function confirmStarter(){
     }
     if(!APP.profile) throw new Error('No se pudo crear el perfil. Vuelve a intentarlo.');
     await dbAddCard(APP.user.id, APP.starterSel);
-    APP.collection = [APP.starterSel];
     APP.deck = [APP.starterSel];
     await dbSaveDeck(APP.user.id, APP.deck);
-    inner.textContent = '✶ ELEGIR ESTA CARTA ✶';
-    loadHome();
+    window.location.reload();
   } catch(e){
     console.error('confirmStarter error:', e);
     btn.disabled = false;
