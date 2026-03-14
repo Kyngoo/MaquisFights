@@ -164,8 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
 //  HOME
 // ============================================================
 function loadHome(){
-  updateHomeBadge();
   go('screen-home');
+  updateHomeBadge();
 }
 
 function updateHomeBadge(){
