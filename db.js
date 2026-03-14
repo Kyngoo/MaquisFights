@@ -20,6 +20,12 @@ async function dbRegister(nickname, password){
     options: { data: { nickname } }  // guardado en raw_user_meta_data → trigger lo pasa a profiles
   });
   if(error) throw error;
+  // Si no hay sesión, el proyecto tiene "Confirm email" activado con emails ficticios → login directo
+  if(!data.session){
+    const { data: d2, error: e2 } = await getDB().auth.signInWithPassword({ email: fakeEmail, password });
+    if(e2) throw new Error('Activa auto-confirm en Supabase: Authentication → Providers → Email → desmarcar "Confirm email"');
+    return d2.user;
+  }
   return data.user;
 }
 

@@ -285,6 +285,7 @@ async function confirmStarter(){
     inner.textContent = '✶ ELEGIR ESTA CARTA ✶';
     loadHome();
   } catch(e){
+    console.error('confirmStarter error:', e);
     btn.disabled = false;
     inner.textContent = '✶ ELEGIR ESTA CARTA ✶';
     alert('Error: ' + e.message);
