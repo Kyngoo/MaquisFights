@@ -57,6 +57,14 @@ window.addEventListener('load', async () => {
 
 async function loadUserData(){
   APP.profile    = await dbGetProfile(APP.user.id);
+  // Si el trigger de Supabase no creó el perfil, crearlo manualmente con el nickname de los metadatos
+  if(!APP.profile){
+    const nickname = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
+    try {
+      await dbCreateProfile(APP.user.id, nickname);
+      APP.profile = await dbGetProfile(APP.user.id);
+    } catch(e){ console.error('Error creando perfil:', e); }
+  }
   APP.collection = await dbGetCollection(APP.user.id);
   APP.deck       = await dbGetDeck(APP.user.id);
   if(APP.collection.length === 0){
@@ -109,14 +117,14 @@ async function submitAuth(){
     btn.disabled = true; btn.querySelector('.gbtn-inner').textContent = 'Creando cuenta...';
     try {
       const exists = await dbNicknameExists(nickname);
-      if(exists){ errEl.textContent = 'Ese nickname ya está en uso'; btn.disabled=false; btn.textContent='REGISTRARSE →'; return; }
+      if(exists){ errEl.textContent = 'Ese nickname ya está en uso'; btn.disabled=false; btn.querySelector('.gbtn-inner').textContent='REGISTRARSE →'; return; }
       APP.user = await dbRegister(nickname, password);
       // Pequeña espera para que el trigger cree el perfil
       await new Promise(r => setTimeout(r, 800));
       await loadUserData();
     } catch(e){
       errEl.textContent = friendlyError(e.message);
-      btn.disabled=false; btn.textContent='REGISTRARSE →';
+      btn.disabled=false; btn.querySelector('.gbtn-inner').textContent='REGISTRARSE →';
     }
 
   } else {
@@ -130,7 +138,7 @@ async function submitAuth(){
       await loadUserData();
     } catch(e){
       errEl.textContent = friendlyError(e.message);
-      btn.disabled=false; btn.textContent='ENTRAR →';
+      btn.disabled=false; btn.querySelector('.gbtn-inner').textContent='ENTRAR →';
     }
   }
 }
@@ -271,11 +279,17 @@ async function confirmStarter(){
     // Esperar a que el trigger de Supabase cree el perfil (puede tardar ~1s tras registro)
     if(!APP.profile){
       inner.textContent = 'Preparando...';
-      for(let i = 0; i < 8; i++){
+      for(let i = 0; i < 6; i++){
         await new Promise(r => setTimeout(r, 500));
-        try { APP.profile = await dbGetProfile(APP.user.id); } catch(_){}
+        APP.profile = await dbGetProfile(APP.user.id);
         if(APP.profile) break;
       }
+    }
+    // Si el trigger nunca creó el perfil, crearlo manualmente como fallback
+    if(!APP.profile){
+      const nickname = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
+      await dbCreateProfile(APP.user.id, nickname);
+      APP.profile = await dbGetProfile(APP.user.id);
     }
     if(!APP.profile) throw new Error('No se pudo crear el perfil. Vuelve a intentarlo.');
     await dbAddCard(APP.user.id, APP.starterSel);

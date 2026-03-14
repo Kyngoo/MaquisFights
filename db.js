@@ -62,8 +62,17 @@ async function dbGetProfile(userId){
     .select('*')
     .eq('id', userId)
     .maybeSingle();
-  if(error) throw error;
+  // PGRST116 = 0 filas → perfil aún no existe, no es un error real
+  if(error && error.code !== 'PGRST116') throw error;
   return data; // null si el perfil aún no existe (trigger pendiente)
+}
+
+async function dbCreateProfile(userId, nickname){
+  const { error } = await getDB()
+    .from('profiles')
+    .insert({ id: userId, nickname, xp: 0, level: 1 });
+  // Si ya existe (race condition con el trigger) ignorar el error de duplicado
+  if(error && error.code !== '23505') throw error;
 }
 
 async function dbUpdateXP(userId, xp, level){
