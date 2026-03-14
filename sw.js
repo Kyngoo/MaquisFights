@@ -1,7 +1,7 @@
-const CACHE = 'maquisfights-v12';
-const ASSETS = ['/', '/index.html', '/style.css', '/cards.js?v=11', '/game.js?v=11', '/manifest.json', '/db.js?v=11', '/config.js?v=11'];
+const CACHE = 'maquisfights-v13';
+const ASSETS = ['/style.css', '/cards.js?v=11', '/game.js?v=11', '/manifest.json', '/db.js?v=11', '/config.js?v=11'];
 
-// Install — cache everything fresh
+// Install — cachear solo assets, NUNCA index.html
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(ASSETS))
@@ -9,7 +9,7 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// Activate — delete ALL old caches
+// Activate — borrar todos los caches viejos
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -19,9 +19,15 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch — NETWORK FIRST, fall back to cache
+// Fetch — index.html SIEMPRE de red; resto: red primero, caché de fallback
 self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
+  const url = new URL(e.request.url);
+  // index.html nunca se cachea — siempre fresco
+  if(url.pathname === '/' || url.pathname === '/index.html'){
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(
     fetch(e.request)
       .then(res => {
@@ -29,6 +35,6 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
       })
-      .catch(() => caches.match(e.request).then(r => r || caches.match('/index.html')))
+      .catch(() => caches.match(e.request))
   );
 });
