@@ -389,7 +389,7 @@ body {
    STARTER CAROUSEL
    ============================================================ */
 #screen-starter {
-  display: flex; flex-direction: column;
+  flex-direction: column;
   background:
     radial-gradient(ellipse at 25% 5%,  rgba(33,150,243,.14) 0%, transparent 50%),
     radial-gradient(ellipse at 75% 95%, rgba(139,36,170,.14) 0%, transparent 50%),
