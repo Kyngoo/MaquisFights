@@ -275,6 +275,8 @@ async function confirmStarter(){
   const btn = document.getElementById('starter-btn');
   const inner = btn.querySelector('.gbtn-inner');
   btn.disabled = true; inner.textContent = 'Guardando...';
+  // Ocultar pantalla starter inmediatamente para evitar doble clic
+  document.getElementById('screen-starter').style.display = 'none';
   try {
     // Esperar a que el trigger de Supabase cree el perfil (puede tardar ~1s tras registro)
     if(!APP.profile){
@@ -293,13 +295,17 @@ async function confirmStarter(){
     }
     if(!APP.profile) throw new Error('No se pudo crear el perfil. Vuelve a intentarlo.');
     await dbAddCard(APP.user.id, APP.starterSel);
+    APP.collection = [APP.starterSel];
     APP.deck = [APP.starterSel];
     await dbSaveDeck(APP.user.id, APP.deck);
-    window.location.reload();
+    loadHome();
   } catch(e){
     console.error('confirmStarter error:', e);
+    // Si algo falló, volver a mostrar la pantalla starter
+    document.getElementById('screen-starter').style.display = '';
+    go('screen-starter');
     btn.disabled = false;
-    inner.textContent = '✶ ELEGIR ESTA CARTA ✶';
+    inner.textContent = '✦ ELEGIR ESTA CARTA ✦';
     alert('Error: ' + e.message);
   }
 }

@@ -98,8 +98,9 @@ async function dbGetCollection(playerId){
 async function dbAddCard(playerId, cardId){
   const { error } = await getDB()
     .from('collections')
-    .upsert({ player_id: playerId, card_id: cardId });
-  if(error) throw error;
+    .upsert({ player_id: playerId, card_id: cardId }, { onConflict: 'player_id,card_id', ignoreDuplicates: true });
+  // 409 = ya existe (duplicado), no es un error real
+  if(error && error.status !== 409) throw error;
 }
 
 // ---- MAZO ----
