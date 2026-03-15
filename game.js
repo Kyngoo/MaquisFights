@@ -172,8 +172,8 @@ async function submitAuth(){
       const exists = await dbNicknameExists(nickname);
       if(exists){ errEl.textContent = 'Ese nickname ya está en uso'; btn.disabled=false; btn.querySelector('.gbtn-inner').textContent='REGISTRARSE →'; return; }
       APP.user = await dbRegister(nickname, password);
-      // Pequeña espera para que el trigger cree el perfil
-      await new Promise(r => setTimeout(r, 800));
+      // Espera para que el trigger de Supabase cree el perfil y la sesión esté lista
+      await new Promise(r => setTimeout(r, 1500));
       await loadUserData();
     } catch(e){
       errEl.textContent = friendlyError(e.message);
@@ -246,9 +246,13 @@ function updateHomeBadge(){
 // ============================================================
 //  STARTER PICK
 // ============================================================
-function renderStarterPick(){
+async function renderStarterPick(){
+  // Si las cartas no se cargaron durante el registro, reintentamos
+  if(!APP.cards.length){
+    document.getElementById('starter-grid').innerHTML = emptyMsg('Cargando cartas...');
+    APP.cards = await dbGetAllCards();
+  }
   const pool = APP.cards.filter(c => c.type === 'player' && c.arena_unlock === 1);
-  // Mezclar y coger 3
   const picks = pool.sort(() => Math.random() - 0.5).slice(0, 3);
   document.getElementById('starter-grid').innerHTML = picks.length
     ? picks.map(c => buildCard(c, 'starter', false)).join('')
