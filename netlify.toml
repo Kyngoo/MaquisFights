@@ -2,7 +2,17 @@
   publish = "."
   command = ""
 
+[build.environment]
+  NODE_VERSION = "20"
+
 [[headers]]
   for = "/*"
   [headers.values]
-    Cache-Control = "no-cache"
+    Cache-Control = "no-store, no-cache, must-revalidate"
+    Pragma = "no-cache"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+    Clear-Site-Data = "\"cache\", \"storage\""
