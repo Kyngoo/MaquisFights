@@ -208,55 +208,75 @@ body {
   border-radius: var(--r-card); overflow: hidden; position: relative;
   background: var(--bg-card); cursor: pointer;
   transition: transform .18s, box-shadow .18s;
-  box-shadow: 0 0 0 2px var(--rc,#555), 0 8px 28px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+  box-shadow: 0 0 0 2px var(--rc,#555), 0 8px 28px rgba(0,0,0,.6);
 }
 .pcard:active { transform: scale(.97); }
-.pcard.selected { box-shadow: 0 0 0 3px var(--rc,#555), 0 0 28px var(--rg,rgba(200,200,200,.3)), 0 8px 28px rgba(0,0,0,.6); transform: translateY(-4px); }
-.pcard.no-pick { cursor: default; }
-.pcard.in-deck { box-shadow: 0 0 0 3px #42a5f5, 0 0 18px rgba(33,150,243,.35), 0 8px 28px rgba(0,0,0,.6); }
+.pcard.selected { box-shadow: 0 0 0 3px var(--rc,#555), 0 0 32px var(--rg,rgba(200,200,200,.3)), 0 8px 28px rgba(0,0,0,.6); transform: translateY(-6px); }
+.pcard.no-pick  { cursor: default; }
+.pcard.in-deck  { box-shadow: 0 0 0 3px #42a5f5, 0 0 20px rgba(33,150,243,.4), 0 8px 28px rgba(0,0,0,.6); }
 
-.pcard.legendario { --rc:#f5c842; --rg:rgba(245,200,66,.55); --hfrom:#3d2500; --hto:#1a1000; --nc:#f5c842; --bbg:rgba(245,200,66,.08); }
-.pcard.epico      { --rc:#ce93d8; --rg:rgba(206,147,216,.5);  --hfrom:#2a0045; --hto:#120020; --nc:#e040fb; --bbg:rgba(206,147,216,.08); }
-.pcard.raro       { --rc:#64b5f6; --rg:rgba(100,181,246,.45); --hfrom:#001840; --hto:#000d20; --nc:#64b5f6; --bbg:rgba(100,181,246,.08); }
-.pcard.comun      { --rc:#90a4ae; --rg:rgba(144,164,174,.3);  --hfrom:#1a1a2a; --hto:#0d0d18; --nc:#cfd8dc; --bbg:rgba(255,255,255,.05); }
+.pcard.legendario { --rc:#f5c842; --rg:rgba(245,200,66,.6);  --hfrom:#3d2500; --hto:#0e0800; --nc:#f5c842; }
+.pcard.epico      { --rc:#ce93d8; --rg:rgba(206,147,216,.55);--hfrom:#2a0045; --hto:#0a0015; --nc:#e040fb; }
+.pcard.raro       { --rc:#64b5f6; --rg:rgba(100,181,246,.5); --hfrom:#001840; --hto:#00080e; --nc:#64b5f6; }
+.pcard.comun      { --rc:#90a4ae; --rg:rgba(144,164,174,.3); --hfrom:#1a1a2a; --hto:#0a0a14; --nc:#cfd8dc; }
 
-.card-img-zone { position: relative; height: 190px; overflow: hidden; background: linear-gradient(160deg,var(--hfrom),var(--hto)); }
-.card-img-zone::after { content:''; position:absolute; bottom:0; left:0; right:0; height:75px; background:linear-gradient(to top,var(--bg-card),transparent); pointer-events:none; z-index:3; }
-.pcard.legendario .card-img-zone::before { content:''; position:absolute; top:-50%; left:-60%; width:40%; height:200%; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.07) 50%,transparent 60%); animation:shimmer 3.5s infinite; z-index:4; }
+/* ---- Image zone: big art ---- */
+.card-img-zone {
+  position: relative; height: 240px; overflow: hidden;
+  background: linear-gradient(170deg, var(--hfrom) 0%, var(--hto) 100%);
+}
+/* bottom fade into card body */
+.card-img-zone::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:110px;
+  background: linear-gradient(to top, var(--bg-card) 0%, transparent 100%);
+  pointer-events:none; z-index:3;
+}
+/* shimmer for legendario */
+.pcard.legendario .card-img-zone::before {
+  content:''; position:absolute; top:-50%; left:-60%; width:35%; height:200%;
+  background: linear-gradient(105deg,transparent 40%,rgba(255,255,255,.09) 50%,transparent 60%);
+  animation: shimmer 3.5s infinite; z-index:4;
+}
+/* extra corner glow for epico */
+.pcard.epico .card-img-zone::before {
+  content:''; position:absolute; top:0; right:0; width:120px; height:120px;
+  background: radial-gradient(circle at top right, rgba(206,147,216,.18), transparent 70%);
+  z-index:1;
+}
 @keyframes shimmer { 0%,100%{left:-60%} 50%{left:120%} }
 
-.card-dots { position:absolute; inset:0; opacity:.04; background-image:radial-gradient(circle,var(--rc) 1px,transparent 1px); background-size:20px 20px; }
-.card-glow { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); width:180px; height:180px; border-radius:50%; background:radial-gradient(ellipse,var(--rg) 0%,transparent 70%); pointer-events:none; }
-.card-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:186px; width:auto; object-fit:contain; z-index:2; filter:drop-shadow(0 0 18px var(--rg)); }
-.card-emo   { position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:95px; line-height:1; z-index:2; filter:drop-shadow(0 0 20px var(--rg)); }
-.card-top   { position:absolute; top:8px; left:8px; right:8px; display:flex; justify-content:space-between; z-index:5; }
-.rpill  { font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; padding:3px 9px; border-radius:20px; background:rgba(0,0,0,.65); border:1px solid var(--rc); color:var(--rc); backdrop-filter:blur(4px); }
-.hppill { font-family:'Cinzel',serif; font-size:12px; letter-spacing:1px; padding:3px 9px; border-radius:20px; background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.18); color:#fff; backdrop-filter:blur(4px); }
-.deck-badge { position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:6; background:linear-gradient(90deg,#1976d2,#42a5f5); color:#fff; font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; padding:3px 10px; border-radius:20px; white-space:nowrap; box-shadow:0 2px 8px rgba(33,150,243,.5); }
+.card-dots { position:absolute; inset:0; opacity:.035; background-image:radial-gradient(circle,var(--rc) 1px,transparent 1px); background-size:22px 22px; }
+.card-glow { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); width:200px; height:200px; border-radius:50%; background:radial-gradient(ellipse,var(--rg) 0%,transparent 65%); pointer-events:none; z-index:1; }
 
+.card-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:235px; width:auto; object-fit:contain; z-index:2; filter:drop-shadow(0 4px 20px var(--rg)); }
+.card-emo   { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:110px; line-height:1; z-index:2; filter:drop-shadow(0 0 24px var(--rg)); }
+
+.card-top { position:absolute; top:9px; left:9px; right:9px; display:flex; justify-content:space-between; z-index:5; }
+.rpill  { font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; padding:3px 9px; border-radius:20px; background:rgba(0,0,0,.7); border:1px solid var(--rc); color:var(--rc); backdrop-filter:blur(6px); }
+.hppill { font-family:'Cinzel',serif; font-size:12px; letter-spacing:1px; padding:3px 9px; border-radius:20px; background:rgba(0,0,0,.7); border:1px solid rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(6px); }
+.deck-badge { position:absolute; top:9px; left:50%; transform:translateX(-50%); z-index:6; background:linear-gradient(90deg,#1976d2,#42a5f5); color:#fff; font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; padding:3px 10px; border-radius:20px; white-space:nowrap; box-shadow:0 2px 8px rgba(33,150,243,.5); }
+
+/* Name overlay over image bottom */
+.card-name-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 0 12px 10px; z-index: 4;
+}
+.cname { font-family:'Cinzel',serif; font-size:20px; font-weight:900; color:var(--nc); line-height:1.1; text-shadow:0 2px 12px rgba(0,0,0,.9), 0 0 20px var(--rg); letter-spacing:.5px; }
+.crole { font-size:10px; color:rgba(255,255,255,.45); letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; text-shadow:0 1px 4px rgba(0,0,0,.9); }
+
+/* ---- Card body: compact stats + tags ---- */
 .card-body { padding: 8px 12px 12px; }
-.cname-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:1px; }
-.cname { font-family:'Cinzel',serif; font-size:17px; font-weight:700; color:var(--nc); line-height:1; text-shadow:0 0 12px var(--rg); }
-.cage  { font-size:11px; color:var(--text-muted); }
-.crole { font-size:10px; color:rgba(255,255,255,.3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px; }
-.chips { display:flex; flex-direction:column; gap:4px; margin-bottom:7px; }
-.chip  { display:flex; align-items:center; gap:6px; padding:4px 9px; border-radius:6px; font-size:12px; }
-.chip.krypto { background:rgba(229,57,53,.08); border:1px solid rgba(229,57,53,.25); }
-.chip.krypto .cl { color:#ef9a9a; font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; white-space:nowrap; }
-.chip.spec   { background:var(--bbg); border:1px solid rgba(255,255,255,.08); }
-.chip.spec .cl { color:var(--nc); font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; white-space:nowrap; }
-.cv { color:rgba(255,255,255,.65); }
-.div { height:1px; background:linear-gradient(90deg,transparent,rgba(201,146,42,.25),transparent); margin:6px 0; }
 
-.stat-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
-.sname { font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; color:var(--text-muted); width:80px; flex-shrink:0; }
-.strack { flex:1; height:7px; background:rgba(0,0,0,.55); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.04); }
+.stat-row { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+.sname  { font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; color:var(--text-muted); width:75px; flex-shrink:0; }
+.strack { flex:1; height:8px; background:rgba(0,0,0,.6); border-radius:4px; overflow:hidden; border:1px solid rgba(255,255,255,.05); }
 .sfill  { height:100%; border-radius:4px; }
-.snum   { font-family:'Cinzel',serif; font-size:10px; font-weight:700; width:26px; text-align:right; color:rgba(255,255,255,.8); }
-.slbl   { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:rgba(255,255,255,.22); margin-bottom:3px; }
-.chips-row { display:flex; gap:4px; flex-wrap:wrap; }
-.achip { background:rgba(33,150,243,.1); border:1px solid rgba(33,150,243,.25); border-radius:4px; padding:2px 7px; font-size:10px; color:#90caf9; }
-.echip { background:rgba(229,57,53,.1); border:1px solid rgba(229,57,53,.25); border-radius:4px; padding:2px 7px; font-size:10px; color:#ef9a9a; }
+.snum   { font-family:'Cinzel',serif; font-size:11px; font-weight:700; width:26px; text-align:right; color:rgba(255,255,255,.85); }
+
+.card-tags { display:flex; flex-direction:column; gap:5px; margin-top:6px; padding-top:6px; border-top:1px solid rgba(255,255,255,.06); }
+.card-tag  { font-size:11px; padding:4px 9px; border-radius:6px; color:rgba(255,255,255,.65); letter-spacing:.5px; }
+.card-tag.krypto { background:rgba(229,57,53,.09); border:1px solid rgba(229,57,53,.22); color:#ef9a9a; }
+.card-tag.spec   { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); color:var(--nc); }
 
 /* ============================================================ PROFILE */
 #screen-profile { background:var(--bg-deep); }

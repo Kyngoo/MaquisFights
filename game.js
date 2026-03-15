@@ -361,34 +361,43 @@ function buildCard(card, mode, selected){
   const fadeMap = {legendario:'#1a1200',epico:'#120020',raro:'#001520',comun:'#141414'};
   const fade  = fadeMap[card.rarity]||'#141414';
   const stars = RARITY_STARS[card.rarity]||'';
+
   const imgHtml = card.image
-    ? `<img class="card-photo" src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="card-emo" style="display:none">${card.emoji}</div>`
-    : `<div class="card-emo">${card.emoji}</div>`;
-  const statsHtml = Object.entries(card.stats).map(([k,v])=>`
+    ? `<img class="card-photo" src="${card.image}" alt="${card.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="card-emo" style="display:none">${card.emoji||'🃏'}</div>`
+    : `<div class="card-emo">${card.emoji||'🃏'}</div>`;
+
+  // Solo los 2 stats más altos
+  const topStats = Object.entries(card.stats).sort((a,b)=>b[1]-a[1]).slice(0,2);
+  const statsHtml = topStats.map(([k,v])=>`
     <div class="stat-row">
       <span class="sname">${k}</span>
       <div class="strack"><div class="sfill" style="width:${v}%;background:${BAR_COLORS[k]||'linear-gradient(90deg,#aaa,#fff)'}"></div></div>
       <span class="snum">${v}</span>
     </div>`).join('');
-  const alliesHtml  = card.aliados&&card.aliados.length  ? `<div style="margin-top:6px"><div class="slbl">ALIADOS</div><div class="chips-row">${card.aliados.map(a=>`<span class="achip">${a}</span>`).join('')}</div></div>` : '';
-  const enemiesHtml = card.enemigos&&card.enemigos.length ? `<div style="margin-top:4px"><div class="slbl">ENEMIGOS</div><div class="chips-row">${card.enemigos.map(e=>`<span class="echip">${e}</span>`).join('')}</div></div>` : '';
-  const deckBadge   = (mode==='deck'&&selected) ? '<div class="deck-badge">EN MAZO</div>' : '';
-  const clickFns    = {pick:`onclick="pickCard(${card.id})"`, starter:`onclick="pickStarter(${card.id})"`, deck:`onclick="toggleDeck(${card.id})"`};
-  const clickFn     = clickFns[mode]||'';
+
+  const deckBadge = (mode==='deck'&&selected) ? '<div class="deck-badge">EN MAZO</div>' : '';
+  const clickFns  = {pick:`onclick="pickCard(${card.id})"`, starter:`onclick="pickStarter(${card.id})"`, deck:`onclick="toggleDeck(${card.id})"`};
+  const clickFn   = clickFns[mode]||'';
+
   return `<div class="pcard ${card.rarity}${selected?' selected':''}${mode==='deck'&&selected?' in-deck':''}${mode==='view'?' no-pick':''}" ${clickFn} style="--fade-to:${fade}">
     <div class="card-img-zone">
       <div class="card-dots"></div><div class="card-glow"></div>
-      <div class="card-top"><span class="rpill">${stars} ${card.rarity.toUpperCase()}</span><span class="hppill">❤ ${card.maxHp}</span></div>
+      <div class="card-top">
+        <span class="rpill">${stars} ${card.rarity.toUpperCase()}</span>
+        <span class="hppill">❤ ${card.maxHp||card.hp}</span>
+      </div>
       ${deckBadge}${imgHtml}
+      <div class="card-name-overlay">
+        <div class="cname">${card.name}</div>
+        <div class="crole">${card.role||''}</div>
+      </div>
     </div>
     <div class="card-body">
-      <div class="cname-row"><div class="cname">${card.name}</div>${card.age?`<div class="cage">${card.age}</div>`:''}</div>
-      <div class="crole">${card.role}</div>
-      <div class="chips">
-        ${card.kryptonita?`<div class="chip krypto"><span class="cl">☠ KRYPTONITA</span><span class="cv">${card.kryptonita}</span></div>`:''}
-        ${card.special?`<div class="chip spec"><span class="cl">⚡ HABILIDAD</span><span class="cv">${card.special}</span></div>`:''}
+      ${statsHtml}
+      <div class="card-tags">
+        ${card.kryptonita ? `<div class="card-tag krypto">☠ ${card.kryptonita}</div>` : ''}
+        ${card.special    ? `<div class="card-tag spec">⚡ ${card.special}</div>`    : ''}
       </div>
-      <div class="div"></div>${statsHtml}${alliesHtml}${enemiesHtml}
     </div>
   </div>`;
 }
