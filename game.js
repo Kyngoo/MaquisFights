@@ -5,6 +5,7 @@
 const APP = {
   user:       null,   // auth user de Supabase
   profile:    null,   // fila de la tabla profiles
+  cards:      [],     // todas las cartas cargadas desde Supabase
   collection: [],
   deck:       [],
   sel:        null,
@@ -20,8 +21,8 @@ const APP = {
 function dc(o){ return JSON.parse(JSON.stringify(o)); }
 function resetPick(){ APP.sel = null; document.getElementById('fight-btn').disabled = true; }
 function setLoading(txt){ document.getElementById('loading-txt').textContent = txt; }
-function allCards(){ return [...PLAYER_CARDS, ...ENEMY_CARDS]; }
-function cardById(id){ return allCards().find(c => c.id === id); }
+function allCards(){ return APP.cards; }
+function cardById(id){ return APP.cards.find(c => c.id === id); }
 
 // ============================================================
 //  ROUTER — navegación por hash
@@ -94,8 +95,14 @@ window.addEventListener('load', async () => {
 });
 
 async function loadUserData(){
-  APP.profile    = await dbGetProfile(APP.user.id);
-  // Si el trigger de Supabase no creó el perfil, crearlo manualmente con el nickname de los metadatos
+  // Cargar cartas y perfil en paralelo
+  const [cards, profile] = await Promise.all([
+    dbGetAllCards(),
+    dbGetProfile(APP.user.id)
+  ]);
+  APP.cards = cards;
+
+  APP.profile = profile;
   if(!APP.profile){
     const nickname = APP.user.user_metadata?.nickname || APP.user.email?.split('@')[0] || 'Jugador';
     try {
@@ -103,6 +110,11 @@ async function loadUserData(){
       APP.profile = await dbGetProfile(APP.user.id);
     } catch(e){ console.error('Error creando perfil:', e); }
   }
+  // Asegurar campos nuevos en perfil
+  if(APP.profile.cups  == null) APP.profile.cups  = 0;
+  if(APP.profile.coins == null) APP.profile.coins = 100;
+  if(APP.profile.arena == null) APP.profile.arena = 1;
+
   APP.collection = await dbGetCollection(APP.user.id);
   APP.deck       = await dbGetDeck(APP.user.id);
   navigate('home');
@@ -210,12 +222,17 @@ function loadHome(){ navigate('home'); }
 function updateHomeBadge(){
   const p = APP.profile;
   if(!p) return;
-  document.getElementById('pb-nick').textContent   = p.nickname;
-  document.getElementById('pb-level').textContent  = 'Nv.'+p.level;
+  document.getElementById('pb-nick').textContent  = p.nickname;
+  document.getElementById('pb-level').textContent = 'Nv.'+p.level;
   const av = document.getElementById('pb-avatar');
   if(av) av.textContent = p.nickname.slice(0,2).toUpperCase();
   const needed = xpForLevel(p.level);
   document.getElementById('pb-xpfill').style.width = Math.min(100, Math.round(p.xp/needed*100))+'%';
+  // Copas y monedas
+  const cupsEl  = document.getElementById('pb-cups');
+  const coinsEl = document.getElementById('pb-coins');
+  if(cupsEl)  cupsEl.textContent  = '🏆 '+(p.cups  || 0);
+  if(coinsEl) coinsEl.textContent = '🪙 '+(p.coins || 0);
 }
 
 
@@ -351,7 +368,8 @@ function calcDmg(a,sk){ return Math.round(getMainStat(a)*sk.power*(0.85+Math.ran
 
 function startBattle(){
   const p = dc(cardById(APP.sel));
-  const e = dc(ENEMY_CARDS[Math.floor(Math.random()*ENEMY_CARDS.length)]);
+  const enemies = APP.cards.filter(c => c.type === 'enemy');
+  const e = dc(enemies[Math.floor(Math.random()*enemies.length)]);
   p.mana=0;p.maxMana=3;e.mana=0;e.maxMana=3;
   APP.battlePlayer=p;APP.battleEnemy=e;APP.turn='player';APP.stunned=false;
   showScreen('screen-battle');
@@ -441,23 +459,60 @@ function pickEnemySkill(e,avail){
   return avail[Math.floor(Math.random()*avail.length)];
 }
 
+// Calcula copas ganadas/perdidas según arena del enemigo y resultado
+function calcCups(win, enemyArena){
+  const myArena = APP.profile.arena || 1;
+  const base    = win ? (15 + Math.floor(Math.random()*16)) : -(10 + Math.floor(Math.random()*11));
+  const bonus   = win && enemyArena > myArena ? 10 : 0;
+  return base + bonus;
+}
+
 async function endBattle(win){
-  const xpEarned=win?XP_WIN:XP_LOSS;
+  const xpEarned  = win ? XP_WIN : XP_LOSS;
+  const coinsEarned = win ? (10 + Math.floor(Math.random()*21)) : 0;
+  const enemyArena  = APP.battleEnemy.arena_unlock || 1;
+  const cupsChange  = calcCups(win, enemyArena);
+
   showScreen('screen-result');
-  document.getElementById('r-icon').textContent =win?'🏆':'💀';
-  document.getElementById('r-title').textContent=win?'¡VICTORIA!':'DERROTA';
-  document.getElementById('r-sub').textContent  =win?`${APP.battlePlayer.name} destruyó a ${APP.battleEnemy.name}`:`${APP.battleEnemy.name} te eliminó.`;
-  document.getElementById('xp-earned-box').style.display='inline-block';
-  document.getElementById('xp-earned-txt').textContent=`+${xpEarned} XP`;
-  document.getElementById('levelup-banner').style.display='none';
+  document.getElementById('r-icon').textContent  = win ? '🏆' : '💀';
+  document.getElementById('r-title').textContent = win ? '¡VICTORIA!' : 'DERROTA';
+  document.getElementById('r-sub').textContent   = win
+    ? `${APP.battlePlayer.name} destruyó a ${APP.battleEnemy.name}`
+    : `${APP.battleEnemy.name} te eliminó.`;
+  document.getElementById('xp-earned-box').style.display = 'inline-block';
+  document.getElementById('xp-earned-txt').textContent   = `+${xpEarned} XP`;
+  document.getElementById('levelup-banner').style.display = 'none';
+
   try{
-    await dbSaveBattle(APP.user.id,APP.battlePlayer.id,APP.battleEnemy.id,win?'win':'loss',xpEarned);
-    let xp=APP.profile.xp+xpEarned, lvl=APP.profile.level;
-    if(xp>=xpForLevel(lvl)){xp-=xpForLevel(lvl);lvl++;document.getElementById('new-level').textContent=lvl;document.getElementById('levelup-banner').style.display='block';}
-    APP.profile.xp=xp;APP.profile.level=lvl;
-    await dbUpdateXP(APP.user.id,xp,lvl);
+    await dbSaveBattle(APP.user.id, APP.battlePlayer.id, APP.battleEnemy.id, win?'win':'loss', xpEarned);
+
+    // XP y nivel
+    let xp = APP.profile.xp + xpEarned;
+    let lvl = APP.profile.level;
+    let leveledUp = false;
+    if(xp >= xpForLevel(lvl)){ xp -= xpForLevel(lvl); lvl++; leveledUp = true; }
+
+    // Copas (no bajan de 0)
+    let cups = Math.max(0, (APP.profile.cups || 0) + cupsChange);
+
+    // Monedas
+    let coins = (APP.profile.coins || 0) + coinsEarned;
+    if(leveledUp) coins += 50; // bonus por subir nivel
+
+    APP.profile.xp    = xp;
+    APP.profile.level = lvl;
+    APP.profile.cups  = cups;
+    APP.profile.coins = coins;
+
+    await dbUpdateXP(APP.user.id, xp, lvl);
+    await dbUpdateProfile(APP.user.id, { cups, coins });
+
+    if(leveledUp){
+      document.getElementById('new-level').textContent = lvl;
+      document.getElementById('levelup-banner').style.display = 'block';
+    }
     updateHomeBadge();
-  }catch(e){console.error(e);}
+  }catch(e){ console.error(e); }
 }
 
 // ============================================================

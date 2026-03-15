@@ -155,13 +155,97 @@ async function dbGetStats(playerId){
 // ---- RANKING ----
 
 async function dbGetRanking(limit = 20){
-  // Top jugadores por nivel desc, luego xp desc
   const { data, error } = await getDB()
     .from('profiles')
-    .select('nickname, level, xp')
+    .select('nickname, level, xp, cups, arena')
+    .order('cups',  { ascending: false })
     .order('level', { ascending: false })
-    .order('xp',    { ascending: false })
     .limit(limit);
   if(error) throw error;
   return data;
+}
+
+// ---- CARTAS ----
+
+async function dbGetAllCards(){
+  const { data, error } = await getDB()
+    .from('cards')
+    .select('*')
+    .eq('active', true);
+  if(error) throw error;
+  return data;
+}
+
+// ---- PERFIL (cups, coins, arena) ----
+
+async function dbUpdateProfile(userId, fields){
+  const { error } = await getDB()
+    .from('profiles')
+    .update(fields)
+    .eq('id', userId);
+  if(error) throw error;
+}
+
+// ---- COFRES ----
+
+async function dbGetChestTypes(){
+  const { data, error } = await getDB()
+    .from('chest_types')
+    .select('*')
+    .order('id');
+  if(error) throw error;
+  return data;
+}
+
+async function dbCanClaimDaily(userId){
+  const today = new Date().toISOString().slice(0,10);
+  const { data } = await getDB()
+    .from('daily_claims')
+    .select('claimed_at')
+    .eq('player_id', userId)
+    .eq('claimed_at', today)
+    .maybeSingle();
+  return !data; // true si puede reclamar
+}
+
+async function dbClaimDaily(userId){
+  const today = new Date().toISOString().slice(0,10);
+  const { error } = await getDB()
+    .from('daily_claims')
+    .insert({ player_id: userId, claimed_at: today });
+  if(error) throw error;
+}
+
+async function dbSaveChestOpen(userId, chestTypeId, cardId, coinsEarned){
+  const { error } = await getDB()
+    .from('chest_history')
+    .insert({ player_id: userId, chest_type: chestTypeId, card_id: cardId, coins_earned: coinsEarned });
+  if(error) throw error;
+}
+
+// ---- MISIONES ----
+
+async function dbGetMissions(){
+  const { data, error } = await getDB()
+    .from('missions')
+    .select('*')
+    .eq('active', true);
+  if(error) throw error;
+  return data;
+}
+
+async function dbGetPlayerMissions(userId){
+  const { data, error } = await getDB()
+    .from('player_missions')
+    .select('*, missions(*)')
+    .eq('player_id', userId);
+  if(error) throw error;
+  return data;
+}
+
+async function dbProgressMission(userId, missionId, progress, completed){
+  const { error } = await getDB()
+    .from('player_missions')
+    .upsert({ player_id: userId, mission_id: missionId, progress, completed }, { onConflict: 'player_id,mission_id' });
+  if(error) throw error;
 }
