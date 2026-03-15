@@ -31,6 +31,7 @@ const ROUTES = {
   home:       { screen: 'screen-home',       load: () => updateHomeBadge() },
   auth:       { screen: 'screen-auth' },
   loading:    { screen: 'screen-loading' },
+  starter:    { screen: 'screen-starter',    load: () => renderStarterPick() },
   collection: { screen: 'screen-collection', load: () => renderMyCollection() },
   deck:       { screen: 'screen-deck',        load: () => renderDeck() },
   pick:       { screen: 'screen-pick',        load: () => { resetPick(); renderPick(); } },
@@ -117,6 +118,12 @@ async function loadUserData(){
 
   APP.collection = await dbGetCollection(APP.user.id);
   APP.deck       = await dbGetDeck(APP.user.id);
+
+  // Jugador nuevo: elegir carta inicial
+  if(!APP.profile.starter_chosen){
+    navigate('starter');
+    return;
+  }
   navigate('home');
 }
 
@@ -235,6 +242,28 @@ function updateHomeBadge(){
   if(coinsEl) coinsEl.textContent = '🪙 '+(p.coins || 0);
 }
 
+
+// ============================================================
+//  STARTER PICK
+// ============================================================
+function renderStarterPick(){
+  const pool = APP.cards.filter(c => c.type === 'player' && c.arena_unlock === 1);
+  // Mezclar y coger 3
+  const picks = pool.sort(() => Math.random() - 0.5).slice(0, 3);
+  document.getElementById('starter-grid').innerHTML = picks.length
+    ? picks.map(c => buildCard(c, 'starter', false)).join('')
+    : emptyMsg('SIN CARTAS EN ARENA 1');
+}
+
+async function pickStarter(id){
+  try {
+    await dbAddCard(APP.user.id, id);
+    await dbUpdateProfile(APP.user.id, { starter_chosen: true });
+    APP.collection.push(id);
+    APP.profile.starter_chosen = true;
+    navigate('home');
+  } catch(e){ alert('Error eligiendo carta: ' + e.message); }
+}
 
 // ============================================================
 //  COLECCIÓN
@@ -479,9 +508,12 @@ async function endBattle(win){
   document.getElementById('r-sub').textContent   = win
     ? `${APP.battlePlayer.name} destruyó a ${APP.battleEnemy.name}`
     : `${APP.battleEnemy.name} te eliminó.`;
-  document.getElementById('xp-earned-box').style.display = 'inline-block';
-  document.getElementById('xp-earned-txt').textContent   = `+${xpEarned} XP`;
-  document.getElementById('levelup-banner').style.display = 'none';
+  document.getElementById('xp-earned-box').style.display  = 'inline-block';
+  document.getElementById('xp-earned-txt').textContent    = `+${xpEarned} XP`;
+  document.getElementById('coins-earned-txt').textContent = win ? `🪙 +${coinsEarned}` : '';
+  document.getElementById('cups-earned-txt').textContent  = `🏆 ${cupsChange >= 0 ? '+' : ''}${cupsChange}`;
+  document.getElementById('levelup-banner').style.display  = 'none';
+  document.getElementById('first-win-banner').style.display = 'none';
 
   try{
     await dbSaveBattle(APP.user.id, APP.battlePlayer.id, APP.battleEnemy.id, win?'win':'loss', xpEarned);
@@ -497,7 +529,7 @@ async function endBattle(win){
 
     // Monedas
     let coins = (APP.profile.coins || 0) + coinsEarned;
-    if(leveledUp) coins += 50; // bonus por subir nivel
+    if(leveledUp) coins += 50;
 
     APP.profile.xp    = xp;
     APP.profile.level = lvl;
@@ -511,6 +543,21 @@ async function endBattle(win){
       document.getElementById('new-level').textContent = lvl;
       document.getElementById('levelup-banner').style.display = 'block';
     }
+
+    // Bonus primera victoria
+    if(win && !APP.profile.first_win_claimed){
+      const pool = APP.cards.filter(c => c.type === 'player' && c.arena_unlock === 1 && !APP.collection.includes(c.id));
+      if(pool.length > 0){
+        const bonus = pool[Math.floor(Math.random() * pool.length)];
+        await dbAddCard(APP.user.id, bonus.id);
+        APP.collection.push(bonus.id);
+        document.getElementById('fw-card').innerHTML = buildCard(bonus, 'view', false);
+        document.getElementById('first-win-banner').style.display = 'block';
+      }
+      APP.profile.first_win_claimed = true;
+      await dbUpdateProfile(APP.user.id, { first_win_claimed: true });
+    }
+
     updateHomeBadge();
   }catch(e){ console.error(e); }
 }

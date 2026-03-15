@@ -483,3 +483,40 @@ body {
 }
 .starter-arrow:active { background: rgba(245,200,66,.15); border-color: var(--gold); }
 .starter-arrow:disabled { opacity: .2; pointer-events: none; }
+
+/* ============================================================ STARTER PICK */
+.starter-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 2rem 1rem 1rem; gap: .75rem; width: 100%;
+}
+.starter-title {
+  font-family: 'Cinzel', serif; font-weight: 900;
+  font-size: clamp(28px,9vw,52px); line-height: 1;
+  text-align: center; letter-spacing: 2px;
+  background: linear-gradient(180deg,#fff8e0 0%,var(--gold) 60%,#8a5500 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(245,200,66,.4));
+}
+.starter-sub {
+  font-size: 13px; letter-spacing: 2px; color: var(--text-muted); text-align: center;
+}
+.starter-hint {
+  font-size: 12px; letter-spacing: 1px; color: rgba(245,200,66,.5);
+  text-align: center; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* ============================================================ FIRST WIN BANNER */
+.first-win-banner {
+  margin: 1rem 0; padding: 1rem;
+  background: linear-gradient(135deg,rgba(245,200,66,.08),rgba(245,200,66,.03));
+  border: 1px solid rgba(245,200,66,.3); border-radius: 14px;
+  text-align: center;
+}
+.fw-title {
+  font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 2px;
+  color: var(--gold); margin-bottom: .25rem;
+}
+.fw-sub {
+  font-size: 12px; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 1rem;
+}

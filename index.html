@@ -97,6 +97,18 @@
   </div>
 </div>
 
+<!-- STARTER PICK -->
+<div class="screen" id="screen-starter">
+  <div class="home-bg-grid"></div>
+  <div class="starter-wrap">
+    <div class="starter-title">ELIGE TU<br>CARTA INICIAL</div>
+    <div class="starter-sub">⚔ Tu primera arma en el campo de batalla ⚔</div>
+    <div class="gold-divider"></div>
+    <div class="starter-hint">Toca una carta para elegirla</div>
+    <div class="cards-scroll" id="starter-grid"></div>
+  </div>
+</div>
+
 <!-- RANKING -->
 <div class="screen" id="screen-ranking">
   <div class="topbar">
@@ -222,9 +234,16 @@
     <div class="r-sub"   id="r-sub"></div>
     <div class="xp-earned-box" id="xp-earned-box" style="display:none">
       <span id="xp-earned-txt"></span>
+      <span id="coins-earned-txt" style="margin-left:8px"></span>
+      <span id="cups-earned-txt"  style="margin-left:8px"></span>
     </div>
     <div class="levelup-banner" id="levelup-banner" style="display:none">
       ⬆ ¡SUBISTE AL NIVEL <span id="new-level">?</span>!
+    </div>
+    <div class="first-win-banner" id="first-win-banner" style="display:none">
+      <div class="fw-title">🎁 ¡CARTA BONUS!</div>
+      <div class="fw-sub">Primera victoria — carta gratis de Arena 1</div>
+      <div id="fw-card"></div>
     </div>
     <div class="r-btns">
       <button class="gbtn gold sm" onclick="navigate('pick')"><div class="gbtn-inner">⚔ REVANCHA</div></button>
