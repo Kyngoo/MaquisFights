@@ -412,6 +412,7 @@ function startBattle(){
   const p = dc(cardById(APP.sel));
   const enemies = APP.cards.filter(c => c.type === 'enemy');
   const e = dc(enemies[Math.floor(Math.random()*enemies.length)]);
+  p.maxHp=p.maxHp||p.hp; e.maxHp=e.maxHp||e.hp;
   p.mana=0;p.maxMana=3;e.mana=0;e.maxMana=3;
   APP.battlePlayer=p;APP.battleEnemy=e;APP.turn='player';APP.stunned=false;
   showScreen('screen-battle');
@@ -459,7 +460,7 @@ function addLog(msg,cls=''){
 function useSkill(sid){
   if(APP.turn!=='player')return;
   const p=APP.battlePlayer,e=APP.battleEnemy;
-  const sk=p.skills.find(s=>s.id===sid);
+  const sk=p.skills.find(s=>String(s.id)===String(sid));
   if(!sk||p.mana<sk.cost)return;
   p.mana-=sk.cost;
   if(['attack','special','ultimate'].includes(sk.type)){
